@@ -7,8 +7,15 @@ export class ControllerCubes {
 
     createCube() {
         const geometry = new THREE.BoxGeometry(0.08, 0.08, 0.08);
-        const material = new THREE.MeshPhongMaterial({ color: 0x00ff00 });
-        return new THREE.Mesh(geometry, material);
+        const material = new THREE.MeshPhongMaterial({ 
+            color: 0x00ff00,
+            transparent: true,
+            opacity: 0.8
+        });
+        const cube = new THREE.Mesh(geometry, material);
+        // Position the cube slightly forward from the controller
+        cube.position.z = -0.1;
+        return cube;
     }
 
     addCubeToController(controller, index) {

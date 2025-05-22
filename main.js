@@ -12,7 +12,7 @@ let raycaster;
 let canvasPanel;
 let isInVR = false;
 
-// New instances for controller visualization
+// Controller visualization instances
 let controllerCubes;
 let controllerRays;
 
@@ -76,10 +76,6 @@ function init() {
     controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
     scene.add(controllerGrip1);
 
-    // Add cube and ray to controller 1
-    controllerCubes.addCubeToController(controller1, 0);
-    controllerRays.addRayToController(controller1, 0);
-
     // Controller 2 (Right)
     controller2 = renderer.xr.getController(1);
     controller2.addEventListener('selectstart', onSelectStart);
@@ -90,21 +86,24 @@ function init() {
     controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
     scene.add(controllerGrip2);
 
-    // Add cube and ray to controller 2
-    controllerCubes.addCubeToController(controller2, 1);
-    controllerRays.addRayToController(controller2, 1);
-
-    // Raycaster setup
-    raycaster = new THREE.Raycaster();
-
-    // XR Session Change Handler
+    // Add cubes and rays when entering VR
     renderer.xr.addEventListener('sessionstart', () => {
         isInVR = true;
+        // Add cubes to controllers
+        const cube1 = controllerCubes.addCubeToController(controller1, 0);
+        const cube2 = controllerCubes.addCubeToController(controller2, 1);
+        
+        // Add rays to cubes
+        controllerRays.addRayToCube(cube1, 0);
+        controllerRays.addRayToCube(cube2, 1);
     });
 
     renderer.xr.addEventListener('sessionend', () => {
         isInVR = false;
     });
+
+    // Raycaster setup
+    raycaster = new THREE.Raycaster();
 
     // Window resize handler
     window.addEventListener('resize', onWindowResize, false);

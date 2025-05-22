@@ -5,8 +5,8 @@ export class ControllerRays {
         this.rays = new Map(); // Store rays by controller index
         this.defaultColor = 0xffffff;
         this.highlightColor = 0xff0000;
-        this.defaultLineWidth = 2;
-        this.highlightLineWidth = 5;
+        this.defaultLineWidth = 3;
+        this.highlightLineWidth = 6;
     }
 
     createRayLine() {
@@ -21,13 +21,13 @@ export class ControllerRays {
         });
 
         const line = new THREE.Line(geometry, material);
-        line.scale.z = 5; // Length of the ray
+        line.scale.z = 10; // Make the ray longer for better visibility
         return line;
     }
 
-    addRayToController(controller, index) {
+    addRayToCube(cube, index) {
         const ray = this.createRayLine();
-        controller.add(ray);
+        cube.add(ray); // Add ray as child of cube
         this.rays.set(index, ray);
         return ray;
     }
