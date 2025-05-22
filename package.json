@@ -1,0 +1,12 @@
+{
+  "name": "exploring_code",
+  "version": "1.0.0",
+  "description": "First Node.js project connected to GitHub using Cursor!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
