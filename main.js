@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { VRButton } from 'three/addons/webxr/VRButton.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
+import { ControllerCubes } from './modules/ControllerCubes.js';
+import { ControllerRays } from './modules/ControllerRays.js';
 
 let container;
 let camera, scene, renderer;
@@ -9,6 +11,10 @@ let controllerGrip1, controllerGrip2;
 let raycaster;
 let canvasPanel;
 let isInVR = false;
+
+// New instances for controller visualization
+let controllerCubes;
+let controllerRays;
 
 const tempMatrix = new THREE.Matrix4();
 
@@ -43,20 +49,24 @@ function init() {
     scene.add(new THREE.AmbientLight(0x404040));
 
     // Create canvas panel (320x180)
-    const canvasGeometry = new THREE.PlaneGeometry(3.2, 1.8); // Scaled up for better visibility in VR
+    const canvasGeometry = new THREE.PlaneGeometry(3.2, 1.8);
     const canvasTexture = new THREE.CanvasTexture(createCanvas());
     const canvasMaterial = new THREE.MeshBasicMaterial({ 
         map: canvasTexture,
         side: THREE.DoubleSide 
     });
     canvasPanel = new THREE.Mesh(canvasGeometry, canvasMaterial);
-    canvasPanel.position.set(0, 1.6, -2); // Positioned in front of the user
+    canvasPanel.position.set(0, 1.6, -2);
     scene.add(canvasPanel);
+
+    // Initialize controller visualization
+    controllerCubes = new ControllerCubes();
+    controllerRays = new ControllerRays();
 
     // Controllers setup
     const controllerModelFactory = new XRControllerModelFactory();
 
-    // Controller 1
+    // Controller 1 (Left)
     controller1 = renderer.xr.getController(0);
     controller1.addEventListener('selectstart', onSelectStart);
     controller1.addEventListener('selectend', onSelectEnd);
@@ -66,7 +76,11 @@ function init() {
     controllerGrip1.add(controllerModelFactory.createControllerModel(controllerGrip1));
     scene.add(controllerGrip1);
 
-    // Controller 2
+    // Add cube and ray to controller 1
+    controllerCubes.addCubeToController(controller1, 0);
+    controllerRays.addRayToController(controller1, 0);
+
+    // Controller 2 (Right)
     controller2 = renderer.xr.getController(1);
     controller2.addEventListener('selectstart', onSelectStart);
     controller2.addEventListener('selectend', onSelectEnd);
@@ -76,21 +90,12 @@ function init() {
     controllerGrip2.add(controllerModelFactory.createControllerModel(controllerGrip2));
     scene.add(controllerGrip2);
 
+    // Add cube and ray to controller 2
+    controllerCubes.addCubeToController(controller2, 1);
+    controllerRays.addRayToController(controller2, 1);
+
     // Raycaster setup
     raycaster = new THREE.Raycaster();
-
-    // Line for visualizing the raycast
-    const geometry = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(0, 0, 0),
-        new THREE.Vector3(0, 0, -1)
-    ]);
-
-    const line = new THREE.Line(geometry);
-    line.name = 'line';
-    line.scale.z = 5;
-
-    controller1.add(line.clone());
-    controller2.add(line.clone());
 
     // XR Session Change Handler
     renderer.xr.addEventListener('sessionstart', () => {
@@ -111,11 +116,9 @@ function createCanvas() {
     canvas.height = 180;
     const context = canvas.getContext('2d');
     
-    // Fill with a light color
     context.fillStyle = '#ffffff';
     context.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add a border
     context.strokeStyle = '#000000';
     context.lineWidth = 2;
     context.strokeRect(0, 0, canvas.width, canvas.height);
@@ -133,17 +136,30 @@ function onSelectStart(event) {
     if (!isInVR) return;
     
     const controller = event.target;
-    const intersections = getIntersections(controller);
+    const controllerIndex = (controller === controller1) ? 0 : 1;
+    
+    // Highlight ray for left controller only
+    if (controllerIndex === 0) {
+        controllerRays.highlightRay(controllerIndex);
+    }
 
+    const intersections = getIntersections(controller);
     if (intersections.length > 0) {
         const intersection = intersections[0];
-        // Handle intersection with canvas panel
         console.log('Hit canvas at:', intersection.point);
     }
 }
 
 function onSelectEnd(event) {
-    // Handle controller select end if needed
+    if (!isInVR) return;
+    
+    const controller = event.target;
+    const controllerIndex = (controller === controller1) ? 0 : 1;
+    
+    // Unhighlight ray for left controller only
+    if (controllerIndex === 0) {
+        controllerRays.unhighlightRay(controllerIndex);
+    }
 }
 
 function getIntersections(controller) {
@@ -165,8 +181,6 @@ function render() {
         // Update raycaster intersections
         const intersections1 = getIntersections(controller1);
         const intersections2 = getIntersections(controller2);
-
-        // You can use these intersections to update the canvas or handle interactions
     }
 
     renderer.render(scene, camera);
